@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the Terrain-Occluded Radar Simulator paper and software release."
+type: software
+title: Terrain-Occluded Radar Simulator
+version: 1.0.0
+date-released: 2026-11-17
+license: 0BSD
+authors:
+  - family-names: Young
+    given-names: Noah
+  - family-names: Vaught
+    given-names: J.C.
+  - family-names: Wang
+    given-names: Yi
+repository-code: https://github.com/IMSEL-Lab/terrain-occluded-radar-simulator

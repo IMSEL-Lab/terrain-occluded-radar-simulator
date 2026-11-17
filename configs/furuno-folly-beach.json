@@ -1,0 +1,64 @@
+{
+  "protocol": "furuno-source-conditioned-diagnostic-v1",
+  "azimuth_bins": 8192,
+  "range_bins": 868,
+  "display_divisor": 252,
+  "range_profile": "observed-sdk-range-index",
+  "radial_mapping": "linear_full_range_unverified_assumption",
+  "seed_values": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "simulations": [
+    "current_mode4",
+    "m42"
+  ],
+  "captures": [
+    {
+      "stratum": "folly_coverage_394",
+      "selection_reason": "Audited clean constant-setting Folly capture; 394/400 covered audit azimuth sectors.",
+      "relative_path": "FollyBeach_20250820_1329_5_Constant_91_91_None/20250820_132923_701.csv",
+      "sha256": "6fcb4dac7372ed6b986a0cecf9a1f0793a675874e6d9d56d7ea8ceaedee30e0c",
+      "rotation_index": 0,
+      "audit_coverage_bins_of_400": 394,
+      "expected_rows": 2371
+    },
+    {
+      "stratum": "folly_coverage_391",
+      "selection_reason": "Audited clean constant-setting Folly capture; 391/400 covered audit azimuth sectors.",
+      "relative_path": "FollyBeach_20250820_1329_5_Constant_91_91_None/20250820_132948_762.csv",
+      "sha256": "7aef63b605f01496012c44b3d9cd67b48a878ede7b9bbb1691d8cc167e6a7ddd",
+      "rotation_index": 0,
+      "audit_coverage_bins_of_400": 391,
+      "expected_rows": 2262
+    },
+    {
+      "stratum": "folly_coverage_396",
+      "selection_reason": "Audited clean constant-setting Folly capture; 396/400 covered audit azimuth sectors.",
+      "relative_path": "FollyBeach_20250820_1329_5_Constant_91_91_None/20250820_133012_471.csv",
+      "sha256": "1fb272f3b7682ee246af4193440337900b8459f1aa91ec8c9685f97e0279460c",
+      "rotation_index": 0,
+      "audit_coverage_bins_of_400": 396,
+      "expected_rows": 2320
+    }
+  ],
+  "excluded_candidates": [
+    {
+      "relative_path": "MurrayDam_20250823_1118_2_Pulse_75_75_BadPattern/20250823_111914_622.csv",
+      "sha256": "7db05b0ac3906653dc040630f10c1e1c5dd1a9163e5dfaadafef554e8332d0e3",
+      "audit_coverage_bins_of_400": 1,
+      "decision": "audit failure only; insufficient azimuth support for a reconstruction comparison"
+    }
+  ],
+  "scoring": {
+    "alignment": "score every quantized source-observed angle and radial bin",
+    "missing_angle_policy": "source-missing angles are excluded, never zero-filled; any missing rendered source angle fails the run",
+    "primary_metric": "normalized MAE on every source-observed bin, divided by 252; fail if any source-observed angle is missing or rendered values are nonfinite",
+    "baselines": "zero echo baseline and m42 source-profile replay ceiling",
+    "foreground_metrics": "report positive source bins and positive simulated bins separately; source-positive-only normalized MAE is null when foreground is empty",
+    "range_claim": "none; radial coordinate is unverified and display-normalized only"
+  }
+}

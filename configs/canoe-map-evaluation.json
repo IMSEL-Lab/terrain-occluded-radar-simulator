@@ -1,0 +1,145 @@
+{
+  "protocol_version": 3,
+  "experiment": "retrospective CANOE original Mode 1 explicit segment-strip diagnostic with corrected official sensor frame",
+  "status": "Frozen CANOE shoreline evaluation protocol.",
+  "dataset": {
+    "acquisition_date": "2025-08-28",
+    "license": "CC BY 4.0",
+    "sequences": {
+      "train": "canoe-2025-08-28-14-13",
+      "validation": "canoe-2025-08-28-14-50",
+      "test": "canoe-2025-08-28-16-15"
+    },
+    "selection_manifest": "manifests/canoe_selected_scans.json",
+    "selection_manifest_sha256": "a3debf098153b605690ed1f5db29d60d47b728dc002361b38dddfe5e58636445",
+    "source_manifest": "manifests/canoe_source_manifest.json",
+    "source_manifest_sha256": "443f83491158ef116f7dd4928c3541058c7e8b96374a4564f8604e53568f0e27",
+    "frozen_scans": {
+      "train": 90,
+      "train_calibration": 30,
+      "validation": 60,
+      "test": 60,
+      "calibration_rule": "Use only the 30 scans already marked train_calibration; no train split or frame reassignment."
+    },
+    "pose_input_sha256": {
+      "train": "b88ee71e5d7e46a2a815430d9b7f48ba8b6320ebc9e8920097556ed51abe4b7e",
+      "validation": "3d2e69aa76fde4a2fc0d6eb97bfa225c15f95f6f693b490ccf49531d75537f7c",
+      "test": "b9b3a9d2d86c6572313fbe6ef5060eab128269f0d41307f29c6875879cd3ba61"
+    },
+    "radar_config_sha256": "ba1ffad53a45d486fbc18da9b4a9ed1fbc535168fab32662b4bda160ff0ed661"
+  },
+  "georeferencing": {
+    "source": "Current OSM reservoir polygon plus the existing train-only CANOE-to-route translation from the frozen OSM diagnostic.",
+    "route_map_inputs": {
+      "train": {
+        "path": "source_inputs/train_route_map.html",
+        "sha256": "7ed391a2a9b32f89f4bdf6e38f6be69316e6ca85498fe9769f9111b908944bc2",
+        "marker_count": 655
+      },
+      "validation": {
+        "path": "source_inputs/validation_route_map.html",
+        "sha256": "1e108cf1fdcd87bfa63c4497ba6f2c5638ffd4a49a783a0bde635b6a15ff268d",
+        "marker_count": 568
+      }
+    },
+    "local_enu_origin_lat_lon_deg": [
+      43.7725429111,
+      -79.4626013556
+    ],
+    "pose_to_map_translation_m": [
+      -46466.999856667026,
+      185121.4388852274
+    ],
+    "fit_rule": "Use the existing train-only translation unchanged. Recompute train and validation pose-only route gates; stop if either fails. Never refit from validation or test.",
+    "train_gate": {
+      "median_max_m": 2.0,
+      "p90_max_m": 5.0
+    },
+    "validation_gate": {
+      "median_max_m": 2.0,
+      "p90_max_m": 5.0
+    },
+    "test_route_map_use": "None.",
+    "sensor_to_enu_transform": "Official CANOE sensor ray is [r*cos(a), r*sin(a)] in [forward,right]. Apply full scan-center M_enu_sensor_xy from C1(roll) C2(pitch) C3(yaw), then map ENU deltas to legacy renderer [right,forward] with P @ inverse(M_enu_sensor_xy), P=[[0,1],[1,0]]."
+  },
+  "independent_geometry": {
+    "source": "OpenStreetMap via the frozen Nominatim GeoJSON acquisition.",
+    "feature_name": "G. Ross Lord Park Reservoir",
+    "osm_type": "way",
+    "osm_id": 160063203,
+    "osm_indexed_date": "2026-09-27T20:46:57.033134+00:00",
+    "acquired_utc": "2026-11-16T06:36:55.167340+00:00",
+    "source_geometry_version": "Not exposed by the response. This geometry is not a historical 2025 shoreline snapshot.",
+    "geometry_path": "source_inputs/osm_reservoir_geojson.json",
+    "geometry_sha256": "4f77fdbdb0df374d67d1ec01a16b0658de1f4772e636deb9e655ef78c21d6018",
+    "boundary_input": "Polygon boundaries and interior rings only, transformed from frozen map ENU into scan-local legacy renderer coordinates using the full scan-center roll/pitch/yaw planar matrix and P axis swap. Reservoir interior is never supplied as land.",
+    "invalid_geometry_action": "Stop without geometry repair."
+  },
+  "renderer": {
+    "engine": "TORS Mode 1 renderer using explicit shoreline segments.",
+    "source_sha256": {
+      "radar_simulator.py": "7a6cc39eebaa193ad7c6001f6559e5ec40bb928f997476f0057c39e727a4ddba",
+      "object_renderer.py": "3e01f8ae4ea7adb096cf13975c555e6785e77ac77918c25957693d4159927c32"
+    },
+    "entry_point": "simulate_from_scene(scene, coastlines, objects=[], output_dir, num_rotations=1).",
+    "mode": "Original Mode 1 generic geometric coastline painter; explicit _sim_mode=SIM_MODE_M1, fixed seed 42.",
+    "source_conditioned_payloads": "Reject/omit coastline profiles and statistics, object echo/support data, noise replay data, dead-zone replay data, Mode 4/42 flags, source files, scene templates, learned correction artifacts, and all objects. Disable learned-model loading and fail if a load is attempted.",
+    "coastline_buffer": {
+      "construction": "One explicit rectangle per consecutive nonzero external OSM boundary segment after the frozen 165 m scan-frame crop and transform.",
+      "width_m": 3.0,
+      "square_cap_extension_each_end_m": 1.5,
+      "details": "Rectangles are built directly from each source segment tangent and normal. No native buffering, smoothing, polygon repair, water-interior fill, or radar-derived geometry is used. Consecutive source segments may overlap at corners; overlaps are counted and intersection areas recorded. Nonfinite, invalid, or zero-area rectangles fail the run. Zero-length/duplicate source segments are counted and skipped.",
+      "max_range_clip_m": 165.0,
+      "native_v1_failure": "The original native line-buffer diagnostic failed before scoring on train calibration scan 1756391392147416.png because a generated native strip was self-intersecting. The v1 output is preserved; no geometry repair was applied."
+    },
+    "mode1_painter_effects": "The native Mode 1 fallback may jitter interval entry by -2 to +2 bins, randomize core code over 244-252, add a seeded 0.3-0.8 fraction of interval thickness to qualifying polygons, and add its random ramp/core-depth texture. These are renderer behavior, not fitted parameters; seed 42 fixes them. The reported 3 m refers to input strip width, not guaranteed final echo support width.",
+    "seed": 42,
+    "radar": {
+      "ticks_per_revolution": 8192,
+      "source_encoder_counts_per_revolution": 5600,
+      "angle_conversion": "round(encoder * 8192 / 5600) modulo 8192; preserve source row order and duplicates.",
+      "bins": 300,
+      "bin_size_m": 0.5,
+      "range_m": 150.0,
+      "dead_zone_bins": 5,
+      "gain_code_setting": 75,
+      "status": 1,
+      "scale": 496,
+      "range_index": 0,
+      "noise_probability": 0.0,
+      "render_row_correspondence": "Require exactly one renderer row per input CANOE azimuth row, exact converted angle sequence, and exactly 300 radial values. Missing predictions fail the run."
+    },
+    "pose_approximation": "Use interpolated scan-center timestamp position and full roll/pitch/yaw transform for the whole rendered scan. Report median and maximum valid-row displacement and wrapped yaw change from that center pose. Intra-scan motion is not rendered.",
+    "raw_prediction_normalization": "Original output is an integer Furuno echo code in [0,252], divided by 252 for the raw renderer arm.",
+    "reference_normalization": "Keep CANOE observed display echoes divided by 255 exactly as the earlier full-valid experiment. Divide original renderer codes by 252. These are dimensionless native display scales; do not rescale observations to imply common physical codes across sensors.",
+    "native_observation_support": "Decode each scan with its actual native range configuration and native echo-bin count. Aggregate native bin centers to the existing 0.5 m grid, crop to [2.5,150) m, and use the same valid-azimuth, pose-supported, finite-source-cell mask for every arm. Absent cells are excluded, never zero-filled.",
+    "input_geometry_method": "explicit_segment_rectangles",
+    "pose_coordinate_transform": "The scan-local map bridge is planar P @ inverse(M_enu_sensor_xy), where M is C1(roll) C2(pitch) C3(yaw) from official CANOE sensor axes [forward,right] to ENU. This is not a full 3D inverse."
+  },
+  "calibration_and_baselines": {
+    "gain": "Fit one nonnegative scalar by least squares on valid cells pooled across only the 30 frozen train_calibration scans, without an upper bound. Apply it to the raw /252 prediction and clip the scaled prediction to [0,1] for the display-normalized scoring domain. Record the fitted scalar and clipping fraction. No offset or other tuning.",
+    "range_profile": "Per-radial-bin observed mean over the same 30 training calibration scans and their exact valid support, broadcast across azimuth.",
+    "occupancy_threshold": {
+      "value": 0.24491978609625667,
+      "source": "Exact training-only threshold already frozen in the completed CANOE OSM diagnostic.",
+      "use": "Report occupancy IoU and positive cell counts for all arms using this unchanged threshold. Do not tune to this renderer or any validation/test result."
+    },
+    "arms": [
+      "legacy_mode1_raw_divided_by_252",
+      "legacy_mode1_train30_scalar_gain",
+      "zero_return",
+      "train30_range_profile_mean"
+    ],
+    "scored_splits": "The already-used 60-scan validation and 60-scan test traversals; retrospective only.",
+    "metrics": "Per-scan MAE and RMSE on shared valid cells; equal-weight mean of per-scan metrics within each traversal."
+  },
+  "interpretation_limits": [
+    "This v3 diagnostic uses explicit segment-strip input; it does not reproduce native loader buffering in the full 150-scan run.",
+    "This follows the original Mode 1 renderer with a static 3 m shoreline-strip approximation; it is not exact motion-aware per-spoke rendering.",
+    "Validation and test traversals were already used in earlier CANOE analyses, so this is not fresh held-out evidence.",
+    "All three traversals share one reservoir site; report descriptive session results only.",
+    "The OSM response does not establish the shoreline geometry on the 2025 acquisition date.",
+    "Observed CANOE echoes retain /255 and renderer echoes use /252 as native dimensionless display scales; neither is claimed to represent common physical codes.",
+    "No manual shoreline labels, source capture profiles, simulator replay, or test-derived fitting are used."
+  ]
+}

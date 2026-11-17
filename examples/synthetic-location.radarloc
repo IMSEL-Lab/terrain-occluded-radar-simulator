@@ -1,0 +1,44 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "location_name": "Synthetic location example",
+    "range_nm": 0.125,
+    "center_lat": 0.0,
+    "center_lon": 0.0,
+    "origin_surface": "water"
+  },
+  "coastlines": [
+    {
+      "name": "Synthetic island",
+      "closed": true,
+      "feature_class": "island",
+      "points": [
+        {
+          "x": 30,
+          "y": 90
+        },
+        {
+          "x": 85,
+          "y": 85
+        },
+        {
+          "x": 105,
+          "y": 135
+        },
+        {
+          "x": 60,
+          "y": 160
+        },
+        {
+          "x": 25,
+          "y": 135
+        },
+        {
+          "x": 30,
+          "y": 90
+        }
+      ]
+    }
+  ],
+  "vessels": []
+}

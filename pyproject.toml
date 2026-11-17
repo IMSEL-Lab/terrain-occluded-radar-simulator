@@ -1,0 +1,64 @@
+[project]
+name = "terrain-occluded-radar-simulator"
+version = "1.0.0"
+description = "Terrain-Occluded Radar Simulator for maritime radar display generation and reconstruction"
+readme = "README.md"
+license = "0BSD"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Noah Young" },
+    { name = "J.C. Vaught" },
+    { name = "Yi Wang" },
+]
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.26,<3", "scipy>=1.12", "pandas>=2.2", "shapely>=2", "pillow>=10", "requests>=2.32"]
+
+[project.scripts]
+tors = "tors.cli:main"
+
+[project.urls]
+Repository = "https://github.com/IMSEL-Lab/terrain-occluded-radar-simulator"
+"Evaluation results" = "https://doi.org/10.5281/zenodo.24316336"
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.14", "ty>=0.0.1"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+dev-mode-dirs = [".", "src"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tors", "src/ddmr"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"radar_simulator.py" = "radar_simulator.py"
+"object_renderer.py" = "object_renderer.py"
+"extract_scene.py" = "extract_scene.py"
+"scripts" = "scripts"
+"configs" = "configs"
+"examples" = "examples"
+"uv.lock" = "uv.lock"
+"NOTICE.md" = "NOTICE.md"
+"coastline_defined" = "coastline_defined"
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]
+addopts = "--import-mode=importlib"
+
+[tool.ruff]
+target-version = "py310"
+extend-exclude = ["radar_simulator.py", "object_renderer.py", "extract_scene.py", "coastline_defined"]
+force-exclude = true
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*.py" = ["E402"]
+
+[tool.ty.src]
+include = ["src", "tests", "scripts"]
+
+[tool.ty.environment]
+extra-paths = ["coastline_defined/runtime"]

@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "description": "Geometry-only audit of original radar_simulator random coastline and object generators using one frozen synthetic in-memory coastline primitive. No capture-derived library, model artifact, or rendering.",
+  "generator": {
+    "coastline_function": "generate_random_coastlines(max_range_m, library=synthetic_library)",
+    "object_function": "generate_random_objects(SceneConfig, max_range_m, coastlines)",
+    "library_scope": "one fixed synthetic primitive reused across every seed and condition; no claim about the capture-derived library's shape distribution",
+    "synthetic_library_primitive": "32-vertex closed radial ellipse in local XY, passed through legacy.build_primitive_from_coastline for native classification and normalization; source_pattern=synthetic_audit_fixture; echo_stats={}"
+  },
+  "ranges_m": [250.0, 500.0, 1000.0, 2500.0],
+  "range_interpretation": "max_range_m passed to the original geometry generators; coastline excursion counts use it as a nominal reporting boundary, while object centers are additionally checked against the generator's 0.95 max-range placement bound",
+  "object_loads": [1, 5, 10, 20, 40],
+  "object_type": "large_boat",
+  "replicate_seeds": [20261116, 20261117, 20261118, 20261119, 20261120],
+  "expected_scene_count": 100,
+  "bounds": {
+    "meaning": "nominal report thresholds; outlying generated geometry is counted, never rejected by the audit",
+    "object_center_range_fraction": 0.95
+  },
+  "geometry_metrics": [
+    "invalid_closed_polygon_count",
+    "coastline_vertex_outside_nominal_range_count",
+    "overlapping_valid_coastline_polygon_pairs",
+    "object_center_in_land_legacy_predicate_count",
+    "object_footprint_valid_land_intersection_count",
+    "object_footprint_overlap_pairs",
+    "object_center_out_of_range_count",
+    "object_center_outside_generator_radius_count",
+    "object_footprint_out_of_range_count",
+    "object_count_requested_and_returned",
+    "coastline_deterministic_reproduction"
+  ]
+}

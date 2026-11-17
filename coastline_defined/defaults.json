@@ -1,0 +1,17 @@
+{
+  "description": "Defaults for Object Creation CoastlineDefined mode.",
+  "range_nm": null,
+  "gain": 0.65,
+  "sea_clutter": 0.0,
+  "rain_clutter": 0.0,
+  "sea_state": 0,
+  "rain_rate_mmh": 0.0,
+  "receiver_noise_enabled": false,
+  "receiver_noise_level": 0.0,
+  "attenuation_model": "entry_r4_depth",
+  "spokes": 1820,
+  "raytrace_spokes": null,
+  "object_profile": "mode1",
+  "seed": 42
+}
+
