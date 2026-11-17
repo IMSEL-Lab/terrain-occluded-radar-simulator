@@ -19,7 +19,7 @@ def test_version_through_public_entrypoint(capsys):
     with pytest.raises(SystemExit) as exc:
         main(["--version"])
     assert exc.value.code == 0
-    assert capsys.readouterr().out.strip() == "1.0.0"
+    assert capsys.readouterr().out.strip() == "1.0.1"
 
 
 def test_bundled_template_survives_generator_filters():

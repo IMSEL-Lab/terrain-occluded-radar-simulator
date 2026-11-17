@@ -1,6 +1,6 @@
 [project]
 name = "terrain-occluded-radar-simulator"
-version = "1.0.0"
+version = "1.0.1"
 description = "Terrain-Occluded Radar Simulator for maritime radar display generation and reconstruction"
 readme = "README.md"
 license = "0BSD"
@@ -18,7 +18,7 @@ tors = "tors.cli:main"
 
 [project.urls]
 Repository = "https://github.com/IMSEL-Lab/terrain-occluded-radar-simulator"
-"Evaluation results" = "https://doi.org/10.5281/zenodo.24316336"
+"Evaluation results" = "https://doi.org/10.5281/zenodo.24316335"
 
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.14", "ty>=0.0.1"]

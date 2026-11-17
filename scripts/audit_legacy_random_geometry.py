@@ -31,6 +31,7 @@ REPO = Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 import radar_simulator as legacy
+from scripts.git_provenance import checkout_revision
 
 SCHEMA_VERSION = 1
 
@@ -285,7 +286,7 @@ def run(config_path: Path, output: Path) -> None:
         config = json.loads(config_bytes)
         manifest["config_sha256"] = hashlib.sha256(config_bytes).hexdigest()
         manifest["source_sha256"] = _source_hashes()
-        manifest["revision"] = _git_revision()
+        manifest["revision"] = checkout_revision(REPO)
         manifest["synthetic_input"] = {
             "scope": config["generator"]["library_scope"],
             "primitive_specification": config["generator"][
@@ -453,20 +454,6 @@ def run(config_path: Path, output: Path) -> None:
     finally:
         manifest["finished_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         _write_json(output / "manifest.json", manifest)
-
-
-def _git_revision() -> str | None:
-    import subprocess
-
-    try:
-        return subprocess.run(
-            ["git", "-C", str(REPO), "rev-parse", "HEAD"],
-            check=True,
-            capture_output=True,
-            text=True,
-        ).stdout.strip()
-    except (OSError, subprocess.CalledProcessError):
-        return None
 
 
 def main(argv: list[str] | None = None) -> None:
