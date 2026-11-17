@@ -11,6 +11,8 @@ import pytest
 from scripts.run_furuno_conditioned_diagnostic import (
     _canonicalize_rotation,
     _guarded_simulator_command,
+    _write_capture_averages,
+    _write_metrics_table,
     run,
     score_pair,
 )
@@ -52,7 +54,40 @@ def test_score_computes_zero_baseline_and_empty_foreground() -> None:
     assert result["common_observed_angles"] == 1
     assert result["paired_valid_bins"] == 3
     assert result["normalized_mae"] == 0.0
+    assert result["normalized_rmse"] == 0.0
     assert result["source_positive_normalized_mae"] is None
+
+
+def test_full_grid_rmse_and_capture_averages(tmp_path) -> None:
+    source = np.array([[0.0, 0.0], [100.0, 100.0], [252.0, 252.0]])
+    rendered = np.array([[0.0, 6.0], [108.0, 100.0], [0.0, 0.0]])
+    scores = score_pair(
+        source, rendered, np.array([True, True, False]), np.ones(3, dtype=bool)
+    )
+    assert scores["normalized_mae"] == pytest.approx(3.5 / 252)
+    assert scores["normalized_rmse"] == pytest.approx(5.0 / 252)
+    assert scores["source_positive_normalized_mae"] == pytest.approx(4.0 / 252)
+    rows = [
+        {"stratum": "capture", "mode": "mode", "seed": 0, **scores},
+        {
+            "stratum": "capture",
+            "mode": "mode",
+            "seed": 1,
+            **(scores | {"normalized_mae": 0.0, "normalized_rmse": 0.0}),
+        },
+    ]
+    _write_metrics_table(tmp_path, rows)
+    averages = _write_capture_averages(tmp_path, rows)
+    assert averages[0]["run_count"] == 2
+    assert averages[0]["normalized_mae"] == pytest.approx(1.75 / 252)
+    assert averages[0]["normalized_rmse"] == pytest.approx(2.5 / 252)
+    with (tmp_path / "metrics_table.csv").open(newline="") as stream:
+        saved_rows = list(csv.DictReader(stream))
+    assert float(saved_rows[0]["normalized_rmse"]) == pytest.approx(5.0 / 252)
+    assert float(saved_rows[0]["normalized_mae"]) == pytest.approx(3.5 / 252)
+    with (tmp_path / "capture_averages.csv").open(newline="") as stream:
+        saved_averages = list(csv.DictReader(stream))
+    assert float(saved_averages[0]["normalized_rmse"]) == pytest.approx(2.5 / 252)
 
 
 def test_canonical_rotation_preserves_rows_across_metadata_segmentation(

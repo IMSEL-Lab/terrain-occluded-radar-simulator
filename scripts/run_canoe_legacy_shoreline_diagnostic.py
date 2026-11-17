@@ -11,7 +11,6 @@ import json
 import math
 import platform
 import resource
-import subprocess
 import sys
 import time
 from collections.abc import Iterable
@@ -43,6 +42,8 @@ from ddmr.canoe import (
     project_scan_with_native_range,
 )
 from scripts import run_canoe_osm_diagnostic as osm
+from scripts.canoe_manifest import verify_source_manifest
+from scripts.git_provenance import checkout_revision
 
 FloatArray = NDArray[np.float64]
 BoolArray = NDArray[np.bool_]
@@ -511,10 +512,9 @@ def _load_records(
         config["dataset"]["selection_manifest_sha256"],
         "selection manifest",
     )
-    osm.verify_hash(
+    verify_source_manifest(
         source_manifest_path,
         config["dataset"]["source_manifest_sha256"],
-        "source manifest",
     )
     selection = json.loads(selection_path.read_text(encoding="utf-8"))
     records = {}
@@ -841,14 +841,8 @@ def _render_record(
 
 
 def runtime_manifest(config_path: Path) -> dict[str, Any]:
-    try:
-        revision = subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True
-        ).strip()
-    except (OSError, subprocess.CalledProcessError):
-        revision = None
     return {
-        "git_revision": revision,
+        "git_revision": checkout_revision(REPO_ROOT),
         "python": platform.python_version(),
         "numpy": np.__version__,
         "config_sha256": sha256_file(config_path),
@@ -913,6 +907,9 @@ def run(
         _write_status(status_path, status)
         roles = ("train", "validation", "test")
         records = _load_records(config, data_root, manifest_dir, roles)
+        status["config_input_hashes"]["source_manifest"] = sha256_file(
+            _manifest_path(manifest_dir, config, "source_manifest")
+        )
         alignment = _alignment_gates(config, source_root, records)
         status["alignment_gates"] = alignment
         _write_status(status_path, status)

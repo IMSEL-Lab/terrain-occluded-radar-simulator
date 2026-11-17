@@ -23,8 +23,11 @@ import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 from ddmr import capture
 from ddmr.capture import CaptureConfig, grid_rotation, load_capture, segment_rotations
+from scripts.git_provenance import checkout_revision
 
 
 def sha256_file(path: Path) -> str:
@@ -33,19 +36,6 @@ def sha256_file(path: Path) -> str:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
-
-
-def _git_revision() -> str | None:
-    """Source hashes remain authoritative for archives without Git metadata."""
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"],
-            cwd=REPO_ROOT,
-            text=True,
-            stderr=subprocess.DEVNULL,
-        ).strip()
-    except (OSError, subprocess.CalledProcessError):
-        return None
 
 
 def score_pair(
@@ -96,6 +86,7 @@ def score_pair(
         "source_positive_fraction": float(positive_source.mean()),
         "rendered_positive_fraction": float((rendered_values > 0).mean()),
         "normalized_mae": float(absolute_error.mean() / divisor),
+        "normalized_rmse": float(np.sqrt(np.mean(absolute_error**2)) / divisor),
         "source_positive_normalized_mae": (
             float(absolute_error[positive_source].mean() / divisor)
             if np.any(positive_source)
@@ -262,11 +253,49 @@ def _write_metrics_table(output_dir: Path, rows: list[dict[str, Any]]) -> None:
         "rendered_positive_fraction",
         "normalized_mae",
         "source_positive_normalized_mae",
+        "normalized_rmse",
     ]
     with path.open("w", newline="", encoding="utf-8") as stream:
         writer = csv.DictWriter(stream, fieldnames=fields, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(rows)
+
+
+def _write_capture_averages(
+    output_dir: Path, rows: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Average per-run scores across seeds within each capture and mode."""
+    groups: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for row in rows:
+        groups.setdefault((row["stratum"], row["mode"]), []).append(row)
+    averages = [
+        {
+            "stratum": stratum,
+            "mode": mode,
+            "run_count": len(group),
+            "normalized_mae": float(np.mean([row["normalized_mae"] for row in group])),
+            "normalized_rmse": float(
+                np.mean([row["normalized_rmse"] for row in group])
+            ),
+        }
+        for (stratum, mode), group in groups.items()
+    ]
+    with (output_dir / "capture_averages.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as stream:
+        writer = csv.DictWriter(
+            stream,
+            fieldnames=[
+                "stratum",
+                "mode",
+                "run_count",
+                "normalized_mae",
+                "normalized_rmse",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(averages)
+    return averages
 
 
 def _guarded_simulator_command(command: list[str]) -> list[str]:
@@ -340,7 +369,7 @@ def run(
         },
         "python": sys.version,
         "platform": platform.platform(),
-        "git_revision": _git_revision(),
+        "git_revision": checkout_revision(REPO_ROOT),
         "environment_controls": {
             key: env[key]
             for key in (
@@ -361,6 +390,7 @@ def run(
         "runner_command": [sys.executable, *sys.argv],
         "runs": [],
         "metrics_table": [],
+        "capture_averages": [],
     }
     _save_manifest(output_dir, manifest)
 
@@ -448,6 +478,9 @@ def run(
                 }
             )
             _write_metrics_table(output_dir, manifest["metrics_table"])
+            manifest["capture_averages"] = _write_capture_averages(
+                output_dir, manifest["metrics_table"]
+            )
             _save_manifest(output_dir, manifest)
             for seed in seed_values:
                 for mode in simulations:
@@ -524,6 +557,9 @@ def run(
                         }
                     )
                     _write_metrics_table(output_dir, manifest["metrics_table"])
+                    manifest["capture_averages"] = _write_capture_averages(
+                        output_dir, manifest["metrics_table"]
+                    )
                     _save_manifest(output_dir, manifest)
             if sha256_file(source_path) != actual_hash:
                 raise ValueError(f"source changed during run: {source_path}")

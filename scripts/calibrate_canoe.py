@@ -10,6 +10,8 @@ from pathlib import Path
 import numpy as np
 from scipy.ndimage import gaussian_filter, label
 
+from scripts.canoe_manifest import verify_source_manifest
+
 CALIBRATION_SEQUENCE = "canoe-2025-08-28-14-13"
 TARGET = "canoe-2025-08-28-14-50/radar/1756392754126501.png"
 SIGMAS = (1.0, 2.0)
@@ -143,7 +145,11 @@ def main(argv: list[str] | None = None) -> None:
     pose_file = data / "novatel/radar_poses.csv"
     radar_config_file = data / "calib/radar_config.yaml"
     based_on = {
-        path.name: verified_hash(path, VERIFIED_SHA256[path.name])
+        path.name: (
+            verify_source_manifest(path, VERIFIED_SHA256[path.name])
+            if path == source_file
+            else verified_hash(path, VERIFIED_SHA256[path.name])
+        )
         for path in [selection_file, source_file, pose_file, radar_config_file]
     }
     frozen = json.loads(selection_file.read_text())

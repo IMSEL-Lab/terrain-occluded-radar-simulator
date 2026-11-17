@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software, please cite the Terrain-Occluded Radar Simulator paper and software release."
 type: software
 title: Terrain-Occluded Radar Simulator
-version: 1.0.0
+version: 1.0.1
 date-released: 2026-11-17
 license: 0BSD
 authors:
